@@ -43,6 +43,12 @@ impl Matrix {
 	let start = index*self.cols;
 	&self.data[start..start+self.cols]
     }
+
+    pub(crate) fn row_mut(&mut self, index: usize) -> &mut [f32] {
+	assert!(index < self.rows);
+	let start = index*self.cols;
+	&mut self.data[start..start+self.cols]
+    }
 }
 
 #[cfg(test)]
