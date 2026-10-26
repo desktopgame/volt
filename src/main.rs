@@ -21,6 +21,21 @@ fn matvec(matrix: &[Vec<f32>], x: &[f32]) -> Vec<f32> {
     result
 }
 
+fn matvec_flat(matrix: &[f32], cols: usize, x: &[f32]) -> Vec<f32> {
+    assert!(cols > 0);
+    assert_eq!(matrix.len() % cols, 0);
+    assert_eq!(cols, x.len());
+
+    let mut result = Vec::new();
+
+    for i in (0..matrix.len()).step_by(cols) {
+	let row = &matrix[i..i+cols];
+	result.push(dot(row, x));
+    }
+
+    result
+}
+
 fn dispvec(vec: &[f32]) {
     for v in vec {
 	println!("{}", v);
@@ -29,6 +44,9 @@ fn dispvec(vec: &[f32]) {
 
 fn main() {
     println!("{}", dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]));
-    dispvec(&matvec(&[Vec::from([1.0, 2.0]), Vec::from([3.0, 4.0])], &[1.0, 2.0]));
+
+    let result = matvec_flat(&[1.0, 2.0, 3.0, 4.0], 2, &[1.0, 2.0]);
+    dispvec(&result);
+    dispvec(&result);
     println!("Hello, world!");
 }
