@@ -124,7 +124,7 @@ fn main() {
 	]
     );
 
-    let score = output_weights.matvec(embeddings.row(1));
+    let score = output_weights.matvec(&y);
     let prob = softmax(&score);
     dispvec(&prob);
 
