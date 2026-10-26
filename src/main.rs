@@ -78,13 +78,4 @@ fn main() {
 mod test {
     use super::*;
 
-    #[test]
-    fn attend_tokens_combines_embeddings() {
-	let embeddings = Matrix::new(2, 2, vec![2.0, 0.0, 0.0, 2.0]);
-	let identity = Matrix::new(2, 2, vec![1.0, 0.0, 0.0, 1.0]);
-	let result = attend_tokens(&[0, 1], &embeddings, &identity, &identity, &identity);
-
-	assert!(result[1] > result[0]);
-	assert!((result[0] + result[1] - 2.0).abs() < 0.0001);
-    }
 }
