@@ -35,7 +35,7 @@ fn predict_next(
     next_id
 }
 
-fn main() {
+fn run_generation() {
     let embeddings = Matrix::new(
 	3,
 	2,
@@ -74,8 +74,14 @@ fn main() {
     println!("{:?}", token_ids);
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+mod training;
 
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    match args.get(1).map(String::as_str) {
+	None => run_generation(),
+	Some("train") => training::run(),
+	Some(_) => eprintln!("help: cargo run -- [train]"),
+    }
 }
