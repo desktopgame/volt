@@ -10,9 +10,9 @@ fn argmax(x: &[f32]) -> usize {
     let mut best = 0;
 
     for i in 0..x.len() {
-	if x[i] > x[best] {
-	    best = i;
-	}
+        if x[i] > x[best] {
+            best = i;
+        }
     }
 
     best
@@ -37,39 +37,40 @@ fn predict_next(
 
 fn run_generation() {
     let embeddings = Matrix::new(
-	3,
-	2,
-	vec![
-	    0.1, 0.2, // token id 0
-	    0.3, 0.4, // token id 1
-	    0.5, 0.6, // token id 2
-	],
+        3,
+        2,
+        vec![
+            0.1, 0.2, // token id 0
+            0.3, 0.4, // token id 1
+            0.5, 0.6, // token id 2
+        ],
     );
 
     let output_weights = Matrix::new(
-	3, 2,
-	vec![
-	    1.0, 0.0, // calculate score id 0
-	    0.0, 1.0, // id 1
-	    1.0, 1.0, // id 2
-	]
+        3,
+        2,
+        vec![
+            1.0, 0.0, // calculate score id 0
+            0.0, 1.0, // id 1
+            1.0, 1.0, // id 2
+        ],
     );
 
     let mut token_ids = vec![1];
-    let w_query = Matrix::new(2, 2,vec![1.0, 0.0, 0.0, 1.0]);
-    let w_key = Matrix::new(2, 2,vec![1.0, 0.0, 0.0, 1.0]);
-    let w_value = Matrix::new(2, 2,vec![1.0, 0.0, 0.0, 1.0]);
+    let w_query = Matrix::new(2, 2, vec![1.0, 0.0, 0.0, 1.0]);
+    let w_key = Matrix::new(2, 2, vec![1.0, 0.0, 0.0, 1.0]);
+    let w_value = Matrix::new(2, 2, vec![1.0, 0.0, 0.0, 1.0]);
 
     for _ in 0..5 {
-	let next_id = predict_next(
-	    &token_ids,
-	    &embeddings,
-	    &w_query,
-	    &w_key,
-	    &w_value,
-	    &output_weights,
-	);
-	token_ids.push(next_id);
+        let next_id = predict_next(
+            &token_ids,
+            &embeddings,
+            &w_query,
+            &w_key,
+            &w_value,
+            &output_weights,
+        );
+        token_ids.push(next_id);
     }
     println!("{:?}", token_ids);
 }
@@ -80,8 +81,8 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     match args.get(1).map(String::as_str) {
-	None => run_generation(),
-	Some("train") => training::run(),
-	Some(_) => eprintln!("help: cargo run -- [train]"),
+        None => run_generation(),
+        Some("train") => training::run(),
+        Some(_) => eprintln!("help: cargo run -- [train]"),
     }
 }
