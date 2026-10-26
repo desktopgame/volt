@@ -30,12 +30,18 @@ impl Matrix {
 
 	let mut result = Vec::new();
 
-	for i in (0..self.data.len()).step_by(self.cols) {
-	    let row = &self.data[i..i+self.cols];
+	for i in 0..self.rows {
+	    let row = self.row(i);
 	    result.push(dot(row, x));
 	}
 
 	result
+    }
+
+    fn row(&self, index: usize) -> &[f32] {
+	assert!(index < self.rows);
+	let start = index*self.cols;
+	&self.data[start..start+self.cols]
     }
 }
 
@@ -99,5 +105,16 @@ mod test {
     #[should_panic]
     fn matrix_rejects_wrong_element_count() {
 	Matrix::new(2, 3, vec![1.0, 2.0]);
+    }
+
+    #[test]
+    fn row_returns_requested_row() {
+	let matrix = Matrix::new(
+	    2, 3,
+	    vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+	);
+
+	assert_eq!(matrix.row(0), &[1.0, 2.0, 3.0]);
+	assert_eq!(matrix.row(1), &[4.0, 5.0, 6.0]);
     }
 }
