@@ -87,9 +87,22 @@ fn dispvec(vec: &[f32]) {
     }
 }
 
-fn main() {
-    println!("{}", dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]));
+fn predict_next(
+    token_id: usize,
+    embeddings: &Matrix,
+    weights: &Matrix,
+    output_weights: &Matrix,
+) -> usize {
+    let embedding_v = embeddings.row(token_id);
+    let x = weights.matvec(embedding_v);
+    let score = output_weights.matvec(&x);
+    let prob = softmax(&score);
+    let next_id = argmax(&prob);
 
+    next_id
+}
+
+fn main() {
     let embeddings = Matrix::new(
 	3,
 	2,
@@ -100,10 +113,6 @@ fn main() {
 	],
     );
 
-    let token_id = 1;
-    let x = embeddings.row(token_id);
-    dispvec(x);
-
     let weights = Matrix::new(
 	2, 2,
 	vec![
@@ -111,9 +120,6 @@ fn main() {
 	    3.0, 4.0
 	]
     );
-
-    let y = weights.matvec(x);
-    dispvec(&y);
 
     let output_weights = Matrix::new(
 	3, 2,
@@ -124,12 +130,13 @@ fn main() {
 	]
     );
 
-    let score = output_weights.matvec(&y);
-    let prob = softmax(&score);
-    dispvec(&prob);
-
-    let selected_token_id = argmax(&prob);
-    println!("{}", selected_token_id);
+    let next_id = predict_next(
+	1,
+	&embeddings,
+	&weights,
+	&output_weights,
+    );
+    println!("{}", next_id);
 }
 
 #[cfg(test)]
