@@ -45,6 +45,42 @@ impl Matrix {
     }
 }
 
+fn softmax(x: &[f32]) -> Vec<f32> {
+    assert!(!x.is_empty());
+
+    let mut max = x[0];
+    let mut sum = 0.0;
+    for &e in x {
+	if e > max {
+	    max = e;
+	}
+    }
+    for e in x {
+	sum += (e - max).exp();
+    }
+
+    let mut result = Vec::new();
+    for e in x {
+	result.push((e - max).exp() / sum);
+    }
+
+    result
+}
+
+fn argmax(x: &[f32]) -> usize {
+    assert!(!x.is_empty());
+
+    let mut best = 0;
+
+    for i in 0..x.len() {
+	if x[i] > x[best] {
+	    best = i;
+	}
+    }
+
+    best
+}
+
 fn matvec(matrix: &[Vec<f32>], x: &[f32]) -> Vec<f32> {
     let mut result = Vec::new();
 
@@ -89,6 +125,22 @@ fn main() {
 
     let y = weights.matvec(x);
     dispvec(&y);
+
+    let output_weights = Matrix::new(
+	3, 2,
+	vec![
+	    1.0, 0.0, // calculate score id 0
+	    0.0, 1.0, // id 1
+	    1.0, 1.0, // id 2
+	]
+    );
+
+    let score = output_weights.matvec(embeddings.row(1));
+    let prob = softmax(&score);
+    dispvec(&prob);
+
+    let selected_token_id = argmax(&prob);
+    println!("{}", selected_token_id);
 }
 
 #[cfg(test)]
@@ -132,5 +184,18 @@ mod test {
 
 	assert_eq!(matrix.row(0), &[1.0, 2.0, 3.0]);
 	assert_eq!(matrix.row(1), &[4.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn softmax_test() {
+	assert_eq!(softmax(&Vec::from(&[0.0, 0.0])), &[0.5, 0.5]);
+	assert_eq!(softmax(&Vec::from(&[-1000.0, -1000.0])), &[0.5, 0.5]);
+
+	let result = softmax(&Vec::from(&[2.0, 1.0, 0.0]));
+	let expected = [0.665241, 0.244728, 0.090031];
+
+	for i in 0..expected.len() {
+	    assert!((result[i] - expected[i]).abs() < 0.00001);
+	}
     }
 }
