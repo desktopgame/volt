@@ -81,17 +81,6 @@ fn argmax(x: &[f32]) -> usize {
     best
 }
 
-fn matvec(matrix: &[Vec<f32>], x: &[f32]) -> Vec<f32> {
-    let mut result = Vec::new();
-
-    for i in 0..matrix.len() {
-	let row = &matrix[i];
-	result.push(dot(row, x))
-    }
-
-    result
-}
-
 fn dispvec(vec: &[f32]) {
     for v in vec {
 	println!("{}", v);
@@ -188,10 +177,10 @@ mod test {
 
     #[test]
     fn softmax_test() {
-	assert_eq!(softmax(&Vec::from(&[0.0, 0.0])), &[0.5, 0.5]);
-	assert_eq!(softmax(&Vec::from(&[-1000.0, -1000.0])), &[0.5, 0.5]);
+	assert_eq!(softmax(&[0.0, 0.0]), &[0.5, 0.5]);
+	assert_eq!(softmax(&[-1000.0, -1000.0]), &[0.5, 0.5]);
 
-	let result = softmax(&Vec::from(&[2.0, 1.0, 0.0]));
+	let result = softmax(&[2.0, 1.0, 0.0]);
 	let expected = [0.665241, 0.244728, 0.090031];
 
 	for i in 0..expected.len() {
