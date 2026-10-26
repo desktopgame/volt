@@ -10,27 +10,37 @@ fn dot(a: &[f32], b: &[f32]) -> f32 {
     sum
 }
 
+
+struct Matrix {
+    data: Vec<f32>,
+    rows: usize,
+    cols: usize
+}
+
+impl Matrix {
+    fn matvec(&self, x: &[f32]) -> Vec<f32> {
+	assert!(self.cols > 0);
+	assert_eq!(self.data.len() % self.cols, 0);
+	assert_eq!(self.cols, x.len());
+	assert_eq!(self.data.len(), (self.rows * self.cols));
+
+	let mut result = Vec::new();
+
+	for i in (0..self.data.len()).step_by(self.cols) {
+	    let row = &self.data[i..i+self.cols];
+	    result.push(dot(row, x));
+	}
+
+	result
+    }
+}
+
 fn matvec(matrix: &[Vec<f32>], x: &[f32]) -> Vec<f32> {
     let mut result = Vec::new();
 
     for i in 0..matrix.len() {
 	let row = &matrix[i];
 	result.push(dot(row, x))
-    }
-
-    result
-}
-
-fn matvec_flat(matrix: &[f32], cols: usize, x: &[f32]) -> Vec<f32> {
-    assert!(cols > 0);
-    assert_eq!(matrix.len() % cols, 0);
-    assert_eq!(cols, x.len());
-
-    let mut result = Vec::new();
-
-    for i in (0..matrix.len()).step_by(cols) {
-	let row = &matrix[i..i+cols];
-	result.push(dot(row, x));
     }
 
     result
@@ -45,8 +55,39 @@ fn dispvec(vec: &[f32]) {
 fn main() {
     println!("{}", dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]));
 
-    let result = matvec_flat(&[1.0, 2.0, 3.0, 4.0], 2, &[1.0, 2.0]);
-    dispvec(&result);
+    let matrix = Matrix {
+	data: vec![1.0, 2.0, 3.0, 4.0],
+	rows: 2,
+	cols: 2
+    };
+    let result = matrix.matvec(&[1.0, 2.0]);
     dispvec(&result);
     println!("Hello, world!");
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn matvec_multiplies_each_row() {
+	let matrix = Matrix {
+	    data: vec![1.0, 2.0, 3.0, 4.0],
+	    rows: 2,
+	    cols: 2
+	};
+	let result = matrix.matvec(&[1.0, 2.0]);
+	assert_eq!(result, vec![5.0, 11.0]);
+    }
+
+    #[test]
+    fn matvec_rectanguler() {
+	let matrix = Matrix {
+	    data: vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+	    rows: 2,
+	    cols: 3,
+	};
+	let result = matrix.matvec(&[1.0, 2.0, 3.0]);
+	assert_eq!(result, vec![14.0, 32.0]);
+    }
 }
