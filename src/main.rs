@@ -65,14 +65,30 @@ fn dispvec(vec: &[f32]) {
 fn main() {
     println!("{}", dot(&[1.0, 2.0, 3.0], &[4.0, 5.0, 6.0]));
 
-    let matrix = Matrix::new(
+    let embeddings = Matrix::new(
+	3,
 	2,
-	2,
-	vec![1.0, 2.0, 3.0, 4.0],
+	vec![
+	    0.1, 0.2, // token id 0
+	    0.3, 0.4, // token id 1
+	    0.5, 0.6, // token id 2
+	],
     );
-    let result = matrix.matvec(&[1.0, 2.0]);
-    dispvec(&result);
-    println!("Hello, world!");
+
+    let token_id = 1;
+    let x = embeddings.row(token_id);
+    dispvec(x);
+
+    let weights = Matrix::new(
+	2, 2,
+	vec![
+	    1.0, 2.0,
+	    3.0, 4.0
+	]
+    );
+
+    let y = weights.matvec(x);
+    dispvec(&y);
 }
 
 #[cfg(test)]
