@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "zenn-cli": {
+      "source": "zenn-dev/zenn-editor",
+      "sourceType": "github",
+      "skillPath": "skills/zenn-cli/SKILL.md",
+      "computedHash": "b4fea99b79ac87606fac46fb0c81eb6b0b6162f49eecd4150257d0c97c63785c"
+    }
+  }
+}

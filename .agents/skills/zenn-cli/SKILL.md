@@ -1,0 +1,129 @@
+---
+name: zenn-cli
+description: >-
+  Zenn CLI による Scrap
+  の一覧・取得・作成・更新・コメント投稿を、安全に行う。`zenn-cli`、Scrap、API
+  キー、公開範囲、Secret・AI scan を扱う時に使う。
+targets:
+  - '*'
+---
+# Zenn CLI
+
+Zenn CLI を使い、Public API 経由で Scrap の取得、作成、更新、コメント操作を行う。認証情報、公開範囲、投稿内容、機械可読出力を安全に扱う。
+
+## Zenn Scrap の考え方
+
+[Zenn 公式の説明](https://zenn.dev/zenn/articles/about-zenn-scraps)では、Scrap はテーマを決めたスレッドへ、好きな単位・タイミングで知見やメモを足していく機能とされている。記事や本のような、学んだことを後から整理した完成稿とは異なり、今まさに取り組んでいる作業、まだ解決していない問題、学習の過程をリアルタイムに残すために使う。
+
+[公開中の Scrap 一覧](https://zenn.dev/scraps)には、調査や試行錯誤のログ、学習・開発記録、参考情報の収集、小さな問題の解決履歴などがある。コメントが 1 件だけの短いメモも、長期間にわたり多数のコメントを追加する記録もあり、最初から記事のように完成させる必要はない。必要に応じてトピックを付け、問題の解決や情報のまとまりを区切る時に Close する。他のユーザーとの意見交換を目的とする場合はコメント投稿を許可できる。
+
+Scrap へ投稿する時は、次を意識する。
+
+- 原則として、複数の話題を含む長文を 1 コメントにまとめるより、小さなコメントを複数追加する。
+- 意味、作業対象、概念、使用したツール、または調査・作業の時系列上の一区切りを目安にコメントを分ける。1 つの発見、仮説、試行、結果、次の課題はそれぞれ自然な区切りになりうる。
+- 区切りや順序を整えるためだけに、投稿済みのコメントを削除したり編集したりしない。訂正や追加情報は、新しいコメントとして積み上げてもよい。
+- 形式を厳守して筆が止まることを避ける。タイトル、構成、結論が暫定的でも、作業中の知見をラフに追加していく。
+
+## セットアップ方法
+
+npm または pnpm を使い、次の 3 種類から選ぶ。
+
+| 方法 | npm | pnpm | インストール後の実行 |
+|------|-----|------|----------------------|
+| グローバルインストール | `npm i -g zenn-cli` | `pnpm add -g zenn-cli` | `zenn scrap ...` |
+| プロジェクトへのインストール | `npm i -D zenn-cli` | `pnpm add -D zenn-cli` | `npm exec -- zenn scrap ...` または `pnpm exec zenn scrap ...` |
+| 直接実行 | `npx zenn-cli scrap ...` | `pnpm dlx zenn-cli scrap ...` | インストール操作なしで実行 |
+
+プロジェクトへインストールした場合は、そのプロジェクトのディレクトリで実行する。以降の `zenn` は、選んだ方法に応じて `npm exec -- zenn`、`pnpm exec zenn`、`npx zenn-cli`、または `pnpm dlx zenn-cli` に置き換える。
+
+## 実行方法
+
+API キーは、実行前に環境変数 `ZENN_API_KEY` に設定する。値を表示したり、コマンド引数へ直書きしたりしない。
+
+操作前にエージェント自身が次のヘルプを読み、利用可能なコマンド、引数、オプション、必要な権限、環境変数、出力形式を確認する。
+
+```bash
+zenn --help
+zenn scrap --help
+```
+
+ヘルプの確認は、ユーザーへ確認作業を依頼するための手順ではない。取得した仕様に従って目的の操作を実行する。
+
+## ユーザー向け環境変数
+
+CLI を起動するシェルで設定する。以下はユーザーが実行時に設定する変数であり、ビルド用・開発内部用の変数は含めない。
+
+### API 接続
+
+| 変数 | 必須条件・既定値 | 用途 |
+|------|------------------|------|
+| `ZENN_API_KEY` | API 操作時に必須 | Zenn の API キー。操作に必要な scope を持つキーを設定する。 |
+| `ZENN_API_BASE_URL` | 任意。既定値は `https://zenn.dev` | 開発・テスト用の接続先 origin。HTTPS、または `http://localhost` のみ使用できる。ポートは指定可能。認証情報、ルート以外のパス、クエリ、フラグメントは指定できない。API キーが送信されるため、信頼できる接続先だけを設定する。 |
+
+### Scrap の安全設定
+
+| 変数 | 設定値・既定値 | 用途 |
+|------|----------------|------|
+| `ZENN_CLI_FORCE_SAFE` | `true` / `false`。既定値は `false` | `true` では Secret scan と AI scan の両方を必須にし、scan のスキップを拒否する。AI scan を自動で有効にはしないため、`ZENN_CLI_AI_SCAN=true` とプロバイダーの設定も必要。 |
+| `ZENN_CLI_FORCE_UNLISTED` | `true` / `false`。既定値は `false` | `true` では Scrap 作成を常に限定公開にする。 |
+
+Secret scan は既定で有効であり、有効化のための環境変数は不要。
+
+### AI scan
+
+| 変数 | 必須条件・設定値・既定値 | 用途 |
+|------|--------------------------|------|
+| `ZENN_CLI_AI_SCAN` | `true` / `false`。既定値は `false` | `true` で AI scan を有効にする。 |
+| `ZENN_CLI_AI_PROVIDER` | AI scan 利用時に必須。生成モデルは `openai` / `fireworks` / `anthropic` / `openrouter` / `bedrock` / `vertex` / `vertex-anthropic` / `azure`、判定モデルは `openai-decisions` / `jev` / `clef` | 送信先の AI プロバイダー。 |
+| `ZENN_CLI_AI_MODEL` | 既定値は `openai` / `openai-decisions` が `gpt-6-luna`、`jev` が `jev-latest`、`clef` が `clef-flash`（`clef` も指定可）。`fireworks` / `anthropic` / `openrouter` / `bedrock` / `vertex` / `vertex-anthropic` / `azure` では必須 | 利用するモデル ID。指定する場合は空文字不可。`bedrock` では推論プロファイル ID も指定できる（application inference profile の ARN は非対応）。`azure` ではデプロイ名を指定する。 |
+| `ZENN_CLI_AI_EFFORT` | `none` / `low` / `medium` / `high`。既定値は `medium` | 生成モデルの推論量。`none` は推論設定を送信しない。モデルが対応する値を選ぶ。`azure` で推論モデルではないデプロイを使う場合は `none` を指定する。判定モデルでは使用しない。 |
+| `ZENN_CLI_AI_SCAN_FAILURE_THRESHOLD` | `low` / `medium` / `high` / `critical`。既定値は `high` | この重要度以上の指摘がある場合に投稿を拒否する。 |
+| `ZENN_CLI_AI_SCAN_PROBABILITY_THRESHOLD` | 0 より大きく 1 より小さい数値。既定値は `0.5` | 判定モデルで、検知事項や重要度を該当とみなす確率。 |
+| `ZENN_CLI_AI_SCAN_PROMPT` | 任意。未設定時は組み込みの検知方針。空文字不可 | 検知方針をカスタマイズするプロンプト。外部プロバイダーに送信されるため、機密情報を書かない。 |
+| `ZENN_CLI_AI_JEV_IMAGES` | `true` / `false`。既定値は `false` | `true` で Jev による画像の AI scan を許可する。TypeSafe の実験的機能のため、明示的に有効にする。 |
+| `OPENAI_API_KEY` | `openai` / `openai-decisions` 利用時に必須 | OpenAI の API キー。 |
+| `FIREWORKS_API_KEY` | `fireworks` 利用時に必須 | Fireworks の API キー。 |
+| `ANTHROPIC_API_KEY` | `anthropic` 利用時に必須 | Anthropic の API キー。 |
+| `OPENROUTER_API_KEY` | `openrouter` 利用時に必須 | OpenRouter の API キー。ZDR（Zero Data Retention）のエンドポイントだけへ振り分けるため、ZDR 非対応のモデルは利用できない。 |
+| `TYPESAFE_API_KEY` | `jev` 利用時に必須 | TypeSafe の API キー。 |
+| `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` | `clef` 利用時に必須 | Workers AI の API トークンとアカウント ID。 |
+| `AWS_REGION` | `bedrock` 利用時に必須 | Amazon Bedrock のリージョン（例: `ap-northeast-1`）。 |
+| `AWS_BEARER_TOKEN_BEDROCK` | 任意 | Amazon Bedrock の API キー。未設定時は AWS の標準の認証情報チェーン（環境変数、`AWS_PROFILE`、SSO、IAM ロールなど）を使う。 |
+| `GOOGLE_VERTEX_PROJECT` / `GOOGLE_VERTEX_LOCATION` | `vertex` / `vertex-anthropic` 利用時に必須 | Vertex AI のプロジェクト ID とロケーション（例: `asia-northeast1`、`us-east5`、`global`）。認証には Application Default Credentials（`gcloud auth application-default login` や `GOOGLE_APPLICATION_CREDENTIALS`）を使う。Express mode の API キー（`GOOGLE_VERTEX_API_KEY`）には対応しておらず、設定されている場合は終了する。 |
+| `AZURE_RESOURCE_NAME` / `AZURE_BASE_URL` | `azure` 利用時にどちらか一方が必須 | Azure OpenAI のリソース名、または `https://<リソース>.openai.azure.com/openai/v1` や Microsoft Foundry の `https://<リソース>.services.ai.azure.com/openai/v1` などの Azure の URL。 |
+| `AZURE_API_KEY` | 任意 | Azure の API キー。未設定時は Microsoft Entra ID（`DefaultAzureCredential`。Azure CLI のログインやマネージド ID など）を使う。 |
+
+送信先のエンドポイントは、指定したリージョン・ロケーション・リソースから組み立てた公式のものに固定し、`AWS_ENDPOINT_URL` などによる上書きは使わない。ただし、認証情報の取得（STS、SSO、Entra ID、メタデータサーバーなど）は各クラウド SDK の標準の動作に従うため、`AWS_ENDPOINT_URL*` や `AZURE_AUTHORITY_HOST` などの設定が適用される。
+
+`bedrock` と `azure` で API キーを設定しない場合や、`vertex` / `vertex-anthropic` を使う場合は、手元の既定の認証情報（AWS の default プロファイル・SSO・IAM ロール、Azure CLI のログイン・マネージド ID、gcloud の ADC など）を自動で使う。意図したアカウント・サブスクリプション・プロジェクトかを事前に確認し、`AWS_PROFILE` や `az account set` などで明示することを推奨する。送信内容は、そのアカウントの課金対象になるほか、呼び出しログ（Bedrock の model invocation logging、Azure の診断ログなど）が有効な場合はそこにも記録される。
+
+推論が行われる場所は設定によって変わる。Bedrock のクロスリージョン推論プロファイル（`us.`、`apac.`、`global.` など）、Vertex AI の `global` ロケーション、Azure の Global・DataZone デプロイでは、指定したリージョン以外で処理される場合がある。処理場所に制約がある場合は、単一リージョンのモデル ID・ロケーション・デプロイ（Azure では Standard デプロイ）を使う。
+
+入力の保持や人間によるレビューの扱いは、各クラウドの既定の動作と設定に従う。不正利用の監視などのために入力が一定期間保持される場合があり、無効化には申請や設定が必要なことがある。Amazon Bedrock ではリージョンごとのデータ保持設定によって、AWS が入力を保持する場合や、利用できないモデルがある場合がある（[Amazon Bedrock のデータ保持](https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html)）。Azure と Vertex AI については、それぞれ [Azure OpenAI のデータ、プライバシー、セキュリティ](https://learn.microsoft.com/azure/foundry/responsible-ai/openai/data-privacy) と [Vertex AI のゼロデータ保持](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention) を確認する。Vertex AI 上の Claude などのパートナーモデルは、Google のモデルとは保持の条件が異なる場合があるため、各モデルの条件を確認する。
+
+判定モデル（`openai-decisions` / `jev` / `clef`）は文章を生成せず、検知事項ごとの確率を返す。指摘には固定の分類名と確率だけを表示する。Clef は一度に検査できる長さ（24,576 トークン）を超えた場合や、処理したトークン数が上限に近く未検査の部分が残った可能性がある場合は、投稿せずに終了する。
+
+画像操作に必要な権限と使い方は `zenn image --help` で確認する。`ZENN_CLI_AI_SCAN=true` の場合は画像のアップロード前にも AI scan を実行し、画像とファイル名を AI プロバイダーへ送信する。画像を扱えないモデルや形式（Jev では PNG・JPEG で縦横 280〜1568px、Clef では PNG・JPEG・WebP）や、全フレームを検査できないアニメーション画像の場合はアップロードせずに終了する。
+
+判定モデルでは、認証情報を該当と判定した場合は `critical`、そのほかの分類は `high` 以上として扱い、重要度の回答だけで検知を弱めない。
+
+## Scrap 操作の方針
+
+- 作成時は公開範囲と他者投稿可否を明示する。指定がなければ限定公開かつ他者投稿禁止とし、作業ログは通常 Open のまま開始する。
+- 本文はまとまりごとに Markdown ファイルへ用意し、小さなコメントとして追加する。
+- Scrap の本文やコメントを書く時は、[Zenn の Markdown 記法一覧](https://zenn.dev/zenn/articles/markdown-guide)を参照し、Zenn で表示できる記法で書く。コードブロック（ファイル名・diff）、メッセージ（`:::message`）、アコーディオン（`:::details`）、リンクカードや各種埋め込み、数式、mermaid のダイアグラムなどは、この記法一覧に従う。
+- 誤りの訂正や新しい知見は、新規コメントで追記することを優先する。既存本文そのものを直す必要がある場合だけ更新する。
+- 既存 Scrap を公開へ変更する前に、対象、所有者、現在の公開範囲、タイトル、全コメント、トピックを確認し、公開してよい内容だけであることを再検査する。
+- 限定公開 Scrap の URL と slug は秘密情報として扱う。
+- 後続処理で結果を使う場合は、ヘルプに記載された機械可読出力を使い、説明文を標準出力へ混ぜない。
+
+## 投稿前の安全確認
+
+Zenn Scrap は不特定多数に公開される。限定公開でも URL または slug を知る人は閲覧できるため、投稿前に本文、タイトル、トピックを確認し、次の情報をマスクまたは除外する。
+
+- 内部 URL、内部ドメイン、顧客名、個人情報、認証情報、未公開の事業情報
+- リクエスト ID、GitHub Private リポジトリの URL、そのほか組織内部の識別子や運用情報
+
+Secret scan は通常スキップしない。scan の有効化や設定方法は `zenn scrap --help` に従う。
+
+AI scan は投稿内容や追加指示を外部プロバイダーへ送るため、送信先、保持、学習利用、リージョン、契約条件についてユーザーの許可と適合性を確認する。機密情報は scan 前にローカルで除去し、AI 向けの備考や追加プロンプトにも機密情報を書かない。
