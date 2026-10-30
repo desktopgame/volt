@@ -1,6 +1,9 @@
 use crate::attention::softmax;
 use crate::matrix::Matrix;
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct Profile {
@@ -24,7 +27,7 @@ fn argmax(x: &[f32]) -> usize {
     best
 }
 
-pub(crate) fn run(profile: &Profile) {
+pub(crate) fn run(profile: &Profile, verbose: Option<PathBuf>) -> std::io::Result<()> {
     let rows = profile.embeddings.len();
     let cols = profile
         .embeddings
@@ -40,6 +43,11 @@ pub(crate) fn run(profile: &Profile) {
     assert_eq!(rows, vocab_size);
     let mut output_weights = Matrix::new(vocab_size, cols, vec![0.0; vocab_size * cols]);
     let examples = &profile.examples;
+
+    let mut verbose_file = verbose.map(File::create).transpose()?;
+    if let Some(vf) = verbose_file.as_mut() {
+        writeln!(vf, "epoch,row,col,weight")?;
+    }
 
     println!("epoch,input_id,target_id,target_prob,loss");
     for epoch in 0..100 {
@@ -70,5 +78,14 @@ pub(crate) fn run(profile: &Profile) {
                 epoch, input_id, target_id, prob[target_id], loss
             );
         }
+
+        if let Some(vf) = verbose_file.as_mut() {
+            for i in 0..output_weights.rows {
+                for j in 0..output_weights.cols {
+                    writeln!(vf, "{},{},{},{}", epoch, i, j, output_weights.row(i)[j])?;
+                }
+            }
+        }
     }
+    Ok(())
 }

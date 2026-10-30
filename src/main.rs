@@ -18,6 +18,8 @@ enum Command {
     Train {
         #[arg(long)]
         profile: PathBuf,
+        #[arg(long)]
+        verbose: Option<PathBuf>,
     },
 }
 
@@ -99,11 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         None => run_generation(),
-        Some(Command::Train { profile }) => {
+        Some(Command::Train { profile, verbose }) => {
             let text = std::fs::read_to_string(profile)?;
             let profile: training::Profile = serde_json::from_str(&text)?;
 
-            training::run(&profile);
+            training::run(&profile, verbose)?;
         }
     }
     Ok(())
