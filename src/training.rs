@@ -1,5 +1,13 @@
 use crate::attention::softmax;
 use crate::matrix::Matrix;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub(crate) struct Profile {
+    vocab: Vec<String>,
+    embeddings: Vec<Vec<f32>>,
+    examples: Vec<(usize, usize)>,
+}
 
 // TODO: copy from main.rs
 fn argmax(x: &[f32]) -> usize {
@@ -16,24 +24,23 @@ fn argmax(x: &[f32]) -> usize {
     best
 }
 
-pub(crate) fn run() {
-    let vocab = ["猫", "犬", "鳴く", "吠える"];
-    let embeddings = Matrix::new(
-        4,
-        2,
-        vec![
-            1.0, 0.0, // 猫
-            0.0, 1.0, // 犬
-            0.0, 0.0, // 鳴く
-            0.0, 0.0, // 吠える
-        ],
-    );
+pub(crate) fn run(profile: &Profile) {
+    let vocab = &profile.vocab;
+    let rows = profile.embeddings.len();
+    let cols = profile
+        .embeddings
+        .first()
+        .expect("embeddings is empty")
+        .len();
+    assert!(cols > 0);
+    assert!(profile.embeddings.iter().all(|row| row.len() == cols));
+    let flatten_embeddings = profile.embeddings.iter().flatten().copied().collect();
+    let embeddings = Matrix::new(rows, cols, flatten_embeddings);
 
-    let mut output_weights = Matrix::new(4, 2, vec![0.0; 8]);
-    let examples: [(usize, usize); 2] = [
-        (0, 2), // 猫→鳴く
-        (1, 3), // 犬→吠える
-    ];
+    let vocab_size = profile.vocab.len();
+    assert_eq!(rows, vocab_size);
+    let mut output_weights = Matrix::new(vocab_size, cols, vec![0.0; vocab_size * cols]);
+    let examples = &profile.examples;
 
     for epoch in 0..100 {
         let print = epoch % 10 == 0;
@@ -41,15 +48,16 @@ pub(crate) fn run() {
             println!("epoch={}", epoch);
         }
 
-        for &(input_id, target_id) in &examples {
+        for &(input_id, target_id) in examples {
             let embedding_vec = embeddings.row(input_id);
             let mut score = output_weights.matvec(embedding_vec);
             let mut prob = softmax(&score);
+            let mut loss = -prob[target_id].ln();
             let mut selected_token_id = argmax(&prob);
             if print {
                 println!(
-                    "input={} target={} selected={} prob={:?}",
-                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob
+                    "input={} target={} selected={} prob={:?} loss={}",
+                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob, loss
                 );
             }
 
@@ -67,12 +75,13 @@ pub(crate) fn run() {
 
             score = output_weights.matvec(embedding_vec);
             prob = softmax(&score);
+            loss = -prob[target_id].ln();
             selected_token_id = argmax(&prob);
 
             if print {
                 println!(
-                    "input={} target={} selected={} prob={:?}",
-                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob
+                    "input={} target={} selected={} prob={:?} loss={}",
+                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob, loss
                 );
             }
         }

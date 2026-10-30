@@ -1,8 +1,25 @@
+use clap::{Parser, Subcommand};
+use std::path::PathBuf;
+
 mod matrix;
 use matrix::Matrix;
 
 mod attention;
 use attention::{attend_tokens, softmax};
+
+#[derive(Debug, Parser)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    Train {
+        #[arg(long)]
+        profile: PathBuf,
+    },
+}
 
 fn argmax(x: &[f32]) -> usize {
     assert!(!x.is_empty());
@@ -77,12 +94,17 @@ fn run_generation() {
 
 mod training;
 
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::parse();
 
-    match args.get(1).map(String::as_str) {
+    match cli.command {
         None => run_generation(),
-        Some("train") => training::run(),
-        Some(_) => eprintln!("help: cargo run -- [train]"),
+        Some(Command::Train { profile }) => {
+            let text = std::fs::read_to_string(profile)?;
+            let profile: training::Profile = serde_json::from_str(&text)?;
+
+            training::run(&profile);
+        }
     }
+    Ok(())
 }
