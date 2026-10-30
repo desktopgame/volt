@@ -25,7 +25,6 @@ fn argmax(x: &[f32]) -> usize {
 }
 
 pub(crate) fn run(profile: &Profile) {
-    let vocab = &profile.vocab;
     let rows = profile.embeddings.len();
     let cols = profile
         .embeddings
@@ -42,25 +41,12 @@ pub(crate) fn run(profile: &Profile) {
     let mut output_weights = Matrix::new(vocab_size, cols, vec![0.0; vocab_size * cols]);
     let examples = &profile.examples;
 
+    println!("epoch,input_id,target_id,target_prob,loss");
     for epoch in 0..100 {
-        let print = epoch % 10 == 0;
-        if print {
-            println!("epoch={}", epoch);
-        }
-
         for &(input_id, target_id) in examples {
             let embedding_vec = embeddings.row(input_id);
-            let mut score = output_weights.matvec(embedding_vec);
-            let mut prob = softmax(&score);
-            let mut loss = -prob[target_id].ln();
-            let mut selected_token_id = argmax(&prob);
-            if print {
-                println!(
-                    "input={} target={} selected={} prob={:?} loss={}",
-                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob, loss
-                );
-            }
-
+            let score = output_weights.matvec(embedding_vec);
+            let prob = softmax(&score);
             let learning_rate = 0.1;
 
             for i in 0..output_weights.rows {
@@ -72,22 +58,17 @@ pub(crate) fn run(profile: &Profile) {
                     row[j] -= learning_rate * error * embedding_vec[j];
                 }
             }
-
-            score = output_weights.matvec(embedding_vec);
-            prob = softmax(&score);
-            loss = -prob[target_id].ln();
-            selected_token_id = argmax(&prob);
-
-            if print {
-                println!(
-                    "input={} target={} selected={} prob={:?} loss={}",
-                    vocab[input_id], vocab[target_id], vocab[selected_token_id], prob, loss
-                );
-            }
         }
-    }
+        for &(input_id, target_id) in examples {
+            let x = embeddings.row(input_id);
+            let scores = output_weights.matvec(x);
+            let prob = softmax(&scores);
+            let loss = -prob[target_id].ln();
 
-    for i in 0..output_weights.rows {
-        println!("{}: {:?}", vocab[i], output_weights.row(i));
+            println!(
+                "{},{},{},{},{}",
+                epoch, input_id, target_id, prob[target_id], loss
+            );
+        }
     }
 }
