@@ -2,6 +2,7 @@
 /docs/private/
 /docs/ltximg
 /docs/*.html
+/docs/__pycache__
 /private-doc/
 /.env
 /*.csv

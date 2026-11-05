@@ -1,0 +1,74 @@
+#+TITLE: Volt - Training Report[2]
+
+\[
+\text{Volt Training Report}
+\]
+
+#+OPTIONS: toc:2 num:nil
+#+HTML_DOCTYPE: html5
+#+HTML_HEAD: <style>details details { margin-left: 2em; }</style>
+#+HTML_HEAD: <style>details > summary { cursor: pointer; font-weight: bold; }</style>
+
+#+begin_src python :format ruff :results output html replace :exports results
+from training import main
+from helper import dispmat, dispvec, matvec, pprint
+from pathlib import Path
+import json
+import csv
+import subprocess
+import math
+import copy
+
+profile_path = Path("~/repos/volt/experiments/basic2.json").expanduser()
+weights_path = Path("~/repos/volt/experiments/basic2_weights.csv").expanduser()
+main(profile_path, weights_path)
+#+end_src
+
+#+RESULTS:
+#+begin_export html
+train report
+configuration
+['猫', '犬', '鳴く', '吠える']
+[[1.0, 1.0], [0.0, 1.0], [0.0, 0.0], [0.0, 0.0]]
+
+epoch
+\[
+output\_weight=\begin{matrix}-0.0250 & -0.0494 \\ -0.0250 & -0.0494 \\ 0.0750 & 0.0481 \\ -0.0250 & 0.0506 \\ \end{matrix}
+\]
+\[
+score=\begin{pmatrix}-0.0744 \\ -0.0744 \\ 0.1231 \\ 0.0256\end{pmatrix}, prob=\begin{pmatrix}0.2313 \\ 0.2313 \\ 0.2818 \\ 0.2556\end{pmatrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0725 \\ -0.0250 & -0.0494 \\ 0.0750 & 0.0481 \\ -0.0250 & 0.0506 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0725 \\ -0.0481 & -0.0725 \\ 0.0750 & 0.0481 \\ -0.0250 & 0.0506 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0725 \\ -0.0481 & -0.0725 \\ 0.1468 & 0.1199 \\ -0.0250 & 0.0506 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0725 \\ -0.0481 & -0.0725 \\ 0.1468 & 0.1199 \\ -0.0506 & 0.0251 \\ \end{matrix}
+\]
+\[
+score=\begin{pmatrix}-0.0725 \\ -0.0725 \\ 0.1199 \\ 0.0251\end{pmatrix}, prob=\begin{pmatrix}0.2318 \\ 0.2318 \\ 0.2809 \\ 0.2555\end{pmatrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0725 \\ 0.1468 & 0.1199 \\ -0.0506 & 0.0251 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0957 \\ 0.1468 & 0.1199 \\ -0.0506 & 0.0251 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0957 \\ 0.1468 & 0.0918 \\ -0.0506 & 0.0251 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0957 \\ 0.1468 & 0.0918 \\ -0.0506 & 0.0995 \\ \end{matrix}
+\]
+\[
+\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0957 \\ 0.1468 & 0.0918 \\ -0.0506 & 0.0995 \\ \end{matrix}
+\]
+\[
+output\_weight=\begin{matrix}-0.0481 & -0.0957 \\ -0.0481 & -0.0957 \\ 0.1468 & 0.0918 \\ -0.0506 & 0.0995 \\ \end{matrix}
+\]
+#+end_export
