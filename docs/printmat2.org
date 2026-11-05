@@ -4,10 +4,7 @@
 \text{Volt Training Report}
 \]
 
-#+OPTIONS: toc:2 num:nil
-#+HTML_DOCTYPE: html5
-#+HTML_HEAD: <style>details details { margin-left: 2em; }</style>
-#+HTML_HEAD: <style>details > summary { cursor: pointer; font-weight: bold; }</style>
+#+SETUPFILE: report-setup.org
 
 #+begin_src python :format ruff :results output html replace :exports results
 from training import main
