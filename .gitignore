@@ -1,5 +1,6 @@
 /target
 /docs/private/
+/docs/ltximg
 /private-doc/
 /.env
 /*.csv
