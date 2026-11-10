@@ -87,5 +87,13 @@ pub(crate) fn run(profile: &Profile, verbose: Option<PathBuf>) -> std::io::Resul
             }
         }
     }
+    for i in 0..vocab_size {
+        let vocab = &profile.vocab[i];
+        let embedding_vec = embeddings.row(i);
+        let score = output_weights.matvec(embedding_vec);
+        let prob = softmax(&score);
+        let predict = argmax(&prob);
+        eprintln!("input={}, predict={}", vocab, profile.vocab[predict]);
+    }
     Ok(())
 }
